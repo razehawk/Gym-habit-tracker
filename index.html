@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Consistency Gym</title>
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Gym Tracker">
+<meta name="theme-color" content="#22c55e">
+<link rel="apple-touch-icon" href="icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -309,59 +315,49 @@
   /* ─── Heatmap ─── */
   .heatmap-wrapper {
     overflow-x: auto;
-    padding-bottom: 4px;
+    padding-bottom: 6px;
+    /* hide scrollbar on iOS but keep scrollability */
+    -webkit-overflow-scrolling: touch;
   }
 
-  .heatmap-labels {
-    display: flex;
-    gap: 0;
-    margin-bottom: 6px;
-    padding-left: 28px;
-  }
-
-  .heatmap-labels span {
-    flex: 1;
-    text-align: center;
-    font-size: 10px;
-    font-weight: 600;
-    color: var(--muted);
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-  }
-
-  .heatmap-grid-wrap {
+  .heatmap-inner {
     display: flex;
     gap: 6px;
     align-items: flex-start;
+    width: max-content; /* grows horizontally as needed */
   }
 
-  .heatmap-day-labels {
-    display: flex;
-    flex-direction: column;
+  /* Day-of-week labels column */
+  .heatmap-dow {
+    display: grid;
+    grid-template-rows: repeat(7, 14px);
     gap: 4px;
+    padding-top: 0;
     flex-shrink: 0;
   }
 
-  .heatmap-day-labels span {
-    height: 14px;
+  .heatmap-dow span {
     font-size: 9px;
     font-weight: 600;
     color: var(--muted);
-    display: flex;
-    align-items: center;
+    line-height: 14px;
     letter-spacing: 0.3px;
+    /* only show Mon / Wed / Fri to avoid clutter, like GitHub */
+    visibility: hidden;
   }
+  .heatmap-dow span.show { visibility: visible; }
 
+  /* The actual grid */
   #calendar {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(7, 14px);
+    grid-auto-flow: column;
     gap: 4px;
-    flex: 1;
   }
 
   .day {
-    width: 100%;
-    aspect-ratio: 1;
+    width: 14px;
+    height: 14px;
     border-radius: 3px;
     background: var(--surface2);
     border: 1px solid rgba(255,255,255,0.03);
@@ -370,7 +366,7 @@
     position: relative;
   }
 
-  .day:hover { transform: scale(1.3); z-index: 2; }
+  .day:hover { transform: scale(1.4); z-index: 2; }
 
   .level-1 { background: var(--green1); border-color: rgba(22,101,52,0.4); }
   .level-2 { background: var(--green2); border-color: rgba(22,101,52,0.6); box-shadow: 0 0 4px rgba(22,101,52,0.3); }
@@ -455,7 +451,18 @@
 <div class="card" style="animation-delay:0.2s">
   <div class="card-label">Consistency Heatmap · Last 28 Days</div>
   <div class="heatmap-wrapper">
-    <div id="calendar"></div>
+    <div class="heatmap-inner">
+      <div class="heatmap-dow">
+        <span class="show">Mon</span>
+        <span></span>
+        <span class="show">Wed</span>
+        <span></span>
+        <span class="show">Fri</span>
+        <span></span>
+        <span></span>
+      </div>
+      <div id="calendar"></div>
+    </div>
   </div>
   <div class="heatmap-legend">
     <span>Less</span>
@@ -471,6 +478,11 @@
 <script>
   let data = JSON.parse(localStorage.getItem("gymData")) || {};
   let today = new Date().toISOString().split("T")[0];
+
+  // Register service worker for PWA offline support
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  }
 
   function startWorkout() {
     document.getElementById("status").innerText = "Workout in progress ⏱️";
@@ -548,35 +560,74 @@
     renderCalendar();
   }
 
+  function getMomentumLevel(day, allDays) {
+    // Count consecutive completed days ending on this day (including itself)
+    let streak = 0;
+    let idx = allDays.indexOf(day);
+    for (let i = idx; i >= 0; i--) {
+      if (data[allDays[i]]) streak++;
+      else break;
+    }
+    if (streak === 0) return 0;
+    if (streak === 1) return 1;
+    if (streak === 2) return 2;
+    if (streak === 3) return 3;
+    return 4; // 4 or more
+  }
+
   function renderCalendar() {
     let cal = document.getElementById("calendar");
     cal.innerHTML = "";
 
-    let days = [];
-    for (let i = 27; i >= 0; i--) {
-      let d = new Date();
-      d.setDate(d.getDate() - i);
-      days.push(d.toISOString().split("T")[0]);
+    // Build date list starting from the Monday of the week 4 weeks ago,
+    // up to today — so the grid aligns by weekday (GitHub style).
+    const todayDate = new Date(today + 'T00:00:00');
+
+    // Find the Monday 27 days back (or adjust to start on Monday)
+    let startDate = new Date(todayDate);
+    startDate.setDate(todayDate.getDate() - 27);
+    // Rewind to the nearest Monday on or before startDate
+    const dow = startDate.getDay(); // 0=Sun
+    const daysToMon = (dow === 0) ? 6 : dow - 1;
+    startDate.setDate(startDate.getDate() - daysToMon);
+
+    // Build full day list from startDate up to today
+    let allDays = [];
+    let cursor = new Date(startDate);
+    while (cursor <= todayDate) {
+      allDays.push(cursor.toISOString().split("T")[0]);
+      cursor.setDate(cursor.getDate() + 1);
     }
 
-    days.forEach((day, idx) => {
+    // Pad end to complete the last week column (up to Sunday)
+    let lastDow = new Date(allDays[allDays.length - 1] + 'T00:00:00').getDay();
+    let padEnd = (lastDow === 0) ? 0 : 7 - lastDow;
+    for (let i = 1; i <= padEnd; i++) {
+      let d = new Date(todayDate);
+      d.setDate(todayDate.getDate() + i);
+      allDays.push(d.toISOString().split("T")[0]);
+    }
+
+    allDays.forEach(day => {
       let div = document.createElement("div");
       div.classList.add("day");
 
-      if (data[day]) {
-        let last7 = getLast7Days();
-        let count = last7.filter(d => data[d]).length;
-        let level = 1;
-        if (count >= 3) level = 2;
-        if (count >= 5) level = 3;
-        if (count === 7) level = 4;
+      const isFuture = day > today;
+
+      if (isFuture) {
+        // Future days: dimmer empty style
+        div.style.opacity = '0.3';
+      } else if (data[day]) {
+        const level = getMomentumLevel(day, allDays.filter(d => d <= today));
         div.classList.add(`level-${level}`);
       }
 
       // Tooltip
       const d = new Date(day + 'T00:00:00');
       const label = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-      div.title = label + (data[day] ? ' · Worked out ✅' : ' · Rest day');
+      if (!isFuture) {
+        div.title = label + (data[day] ? ' · Worked out ✅' : ' · Rest day');
+      }
 
       // Highlight today
       if (day === today) {
