@@ -1,40 +1,99 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Consistency Gym</title>
+<title>Consistency Gym</title><link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#22c55e"><link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet"><style>
+:root {
+  --bg:#080b10;
+  --surface:#0e1420;
+  --border:rgba(255,255,255,0.06);
+  --green1:#14532d;
+  --green2:#166534;
+  --green3:#22c55e;
+  --green4:#4ade80;
+  --accent:#22c55e;
+  --text:#f1f5f9;
+  --muted:#64748b;
+}
 
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#22c55e">
+*{box-sizing:border-box;margin:0;padding:0;}
 
-<style>
-body{font-family:Arial;background:#080b10;color:white;text-align:center}
-#calendar{display:grid;grid-template-rows:repeat(7,1fr);grid-auto-flow:column;gap:4px}
-.day{width:14px;height:14px;background:#1e293b;border-radius:3px}
-.level-1{background:#14532d}
-.level-2{background:#166534}
-.level-3{background:#22c55e}
-.level-4{background:#4ade80}
-</style>
-</head>
-<body>
+body{
+  font-family:'Outfit',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  max-width:420px;
+  margin:auto;
+  padding-bottom:40px;
+}
 
-<h1>Consistency Gym</h1>
+/* Header */
+.header{
+  padding:50px 20px 20px;
+}
+h1{
+  font-family:'Bebas Neue';
+  font-size:48px;
+}
 
-<div id="status">Not started</div>
-<button onclick="startWorkout()" id="startBtn">Start</button>
-<button onclick="completeWorkout()" id="completeBtn" style="display:none">Complete</button>
+/* Cards */
+.card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:20px;
+  padding:20px;
+  margin:14px;
+  text-align:center;
+}
 
-<div id="score"></div>
-<div id="calendar"></div>
+/* Buttons */
+button{
+  padding:14px;
+  border-radius:14px;
+  border:none;
+  font-weight:600;
+  margin-top:10px;
+}
+.btn-primary{background:var(--accent);color:white;}
+.btn-secondary{background:transparent;border:1px solid var(--accent);color:var(--accent);}
 
-<script>
+/* Heatmap */
+#calendar{
+  display:grid;
+  grid-template-rows:repeat(7,1fr);
+  grid-auto-flow:column;
+  gap:4px;
+  justify-content:center;
+}
+
+.day{
+  width:14px;
+  height:14px;
+  border-radius:3px;
+  background:#1e293b;
+}
+
+.level-1{background:var(--green1);}
+.level-2{background:var(--green2);}
+.level-3{background:var(--green3);}
+.level-4{background:var(--green4);}
+</style></head><body><div class="header">
+  <h1>CONSISTENCY</h1>
+</div><div class="card">
+  <div id="status">Not started today</div>
+  <button class="btn-primary" onclick="startWorkout()" id="startBtn">Start Workout</button>
+  <button class="btn-secondary" id="completeBtn" onclick="completeWorkout()" style="display:none;">Complete 1 Hour</button>
+</div><div class="card">
+  <div id="score">0/7</div>
+</div><div class="card">
+  <div id="calendar"></div>
+</div><script>
 let data = JSON.parse(localStorage.getItem("gymData")) || {};
 let today = new Date().toISOString().split("T")[0];
 
 function startWorkout(){
-  document.getElementById("status").innerText="In progress";
+  document.getElementById("status").innerText="Workout in progress ⏱️";
   document.getElementById("completeBtn").style.display="block";
   document.getElementById("startBtn").style.display="none";
 }
@@ -42,6 +101,10 @@ function startWorkout(){
 function completeWorkout(){
   data[today]=true;
   localStorage.setItem("gymData",JSON.stringify(data));
+
+  document.body.style.background="#052e16";
+  setTimeout(()=>{document.body.style.background="#080b10";},300);
+
   updateUI();
 }
 
@@ -58,12 +121,16 @@ function getLast7Days(){
 function updateUI(){
   let last7=getLast7Days();
   let count=last7.filter(d=>data[d]).length;
-  document.getElementById("score").innerText=count+"/7";
+
+  document.getElementById("score").innerText=`${count}/7`;
 
   if(data[today]){
     document.getElementById("startBtn").style.display="none";
     document.getElementById("completeBtn").style.display="none";
-    document.getElementById("status").innerText="Done";
+    document.getElementById("status").innerText="Completed today ✅";
+  }else{
+    document.getElementById("startBtn").style.display="block";
+    document.getElementById("completeBtn").style.display="none";
   }
 
   renderCalendar();
@@ -72,26 +139,37 @@ function updateUI(){
 function renderCalendar(){
   let cal=document.getElementById("calendar");
   cal.innerHTML="";
+
   for(let i=27;i>=0;i--){
     let d=new Date();
     d.setDate(d.getDate()-i);
     let day=d.toISOString().split("T")[0];
+
     let div=document.createElement("div");
     div.classList.add("day");
 
     if(data[day]){
       let streak=0;
+
       for(let j=0;j<4;j++){
         let x=new Date(day);
         x.setDate(x.getDate()-j);
         let key=x.toISOString().split("T")[0];
-        if(data[key]) streak++; else break;
+
+        if(data[key]) streak++;
+        else break;
       }
+
       let level=1;
       if(streak>=2) level=2;
       if(streak>=3) level=3;
       if(streak>=4) level=4;
-      div.classList.add("level-"+level);
+
+      div.classList.add(`level-${level}`);
+    }
+
+    if(day===today){
+      div.style.outline="2px solid #22c55e";
     }
 
     cal.appendChild(div);
@@ -103,7 +181,5 @@ updateUI();
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("./service-worker.js");
 }
-</script>
-
-</body>
+</script></body>
 </html>
