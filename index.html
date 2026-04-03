@@ -1,185 +1,594 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Consistency Gym</title><link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#22c55e"><link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet"><style>
-:root {
-  --bg:#080b10;
-  --surface:#0e1420;
-  --border:rgba(255,255,255,0.06);
-  --green1:#14532d;
-  --green2:#166534;
-  --green3:#22c55e;
-  --green4:#4ade80;
-  --accent:#22c55e;
-  --text:#f1f5f9;
-  --muted:#64748b;
-}
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Consistency Gym</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #080b10;
+    --surface:   #0e1420;
+    --surface2:  #131b2b;
+    --border:    rgba(255,255,255,0.06);
+    --green0:    #0d1f12;
+    --green1:    #14532d;
+    --green2:    #166534;
+    --green3:    #22c55e;
+    --green4:    #4ade80;
+    --accent:    #22c55e;
+    --accent-dim:#16a34a;
+    --text:      #f1f5f9;
+    --muted:     #64748b;
+    --muted2:    #334155;
+  }
 
-*{box-sizing:border-box;margin:0;padding:0;}
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-body{
-  font-family:'Outfit',sans-serif;
-  background:var(--bg);
-  color:var(--text);
-  max-width:420px;
-  margin:auto;
-  padding-bottom:40px;
-}
+  html { -webkit-tap-highlight-color: transparent; }
 
-/* Header */
-.header{
-  padding:50px 20px 20px;
-}
-h1{
-  font-family:'Bebas Neue';
-  font-size:48px;
-}
+  body {
+    font-family: 'Outfit', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 0 0 48px;
+    max-width: 420px;
+    margin: 0 auto;
+    position: relative;
+    overflow-x: hidden;
+  }
 
-/* Cards */
-.card{
-  background:var(--surface);
-  border:1px solid var(--border);
-  border-radius:20px;
-  padding:20px;
-  margin:14px;
-  text-align:center;
-}
+  /* Background glow */
+  body::before {
+    content: '';
+    position: fixed;
+    top: -120px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 340px;
+    height: 340px;
+    background: radial-gradient(circle, rgba(34,197,94,0.12) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
 
-/* Buttons */
-button{
-  padding:14px;
-  border-radius:14px;
-  border:none;
-  font-weight:600;
-  margin-top:10px;
-}
-.btn-primary{background:var(--accent);color:white;}
-.btn-secondary{background:transparent;border:1px solid var(--accent);color:var(--accent);}
+  /* ─── Header ─── */
+  .header {
+    padding: 52px 24px 20px;
+    position: relative;
+    z-index: 1;
+    animation: fadeDown 0.5s ease both;
+  }
 
-/* Heatmap */
-#calendar{
-  display:grid;
-  grid-template-rows:repeat(7,1fr);
-  grid-auto-flow:column;
-  gap:4px;
-  justify-content:center;
-}
+  .header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+  }
 
-.day{
-  width:14px;
-  height:14px;
-  border-radius:3px;
-  background:#1e293b;
-}
+  .app-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
 
-.level-1{background:var(--green1);}
-.level-2{background:var(--green2);}
-.level-3{background:var(--green3);}
-.level-4{background:var(--green4);}
-</style></head><body><div class="header">
+  .streak-pill {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(34,197,94,0.1);
+    border: 1px solid rgba(34,197,94,0.2);
+    border-radius: 999px;
+    padding: 5px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent);
+  }
+
+  h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 48px;
+    letter-spacing: 1px;
+    line-height: 1;
+    color: var(--text);
+  }
+
+  /* ─── Cards ─── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 20px;
+    margin: 0 16px 14px;
+    position: relative;
+    z-index: 1;
+    animation: fadeUp 0.5s ease both;
+  }
+
+  .card:nth-child(2) { animation-delay: 0.05s; }
+  .card:nth-child(3) { animation-delay: 0.10s; }
+  .card:nth-child(4) { animation-delay: 0.15s; }
+  .card:nth-child(5) { animation-delay: 0.20s; }
+
+  .card-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 14px;
+  }
+
+  /* ─── Status card ─── */
+  .status-card {
+    background: linear-gradient(135deg, #0e1f16 0%, var(--surface) 100%);
+    border-color: rgba(34,197,94,0.15);
+    text-align: center;
+    padding: 28px 20px;
+  }
+
+  .status-icon {
+    width: 64px;
+    height: 64px;
+    background: rgba(34,197,94,0.1);
+    border: 1px solid rgba(34,197,94,0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    margin: 0 auto 16px;
+    transition: all 0.4s ease;
+  }
+
+  .status-icon.active {
+    background: rgba(34,197,94,0.18);
+    border-color: rgba(34,197,94,0.5);
+    box-shadow: 0 0 30px rgba(34,197,94,0.2);
+    animation: pulse 2s infinite;
+  }
+
+  .status-icon.done {
+    background: rgba(34,197,94,0.2);
+    border-color: var(--accent);
+    box-shadow: 0 0 40px rgba(34,197,94,0.3);
+  }
+
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 20px rgba(34,197,94,0.2); }
+    50%       { box-shadow: 0 0 40px rgba(34,197,94,0.4); }
+  }
+
+  #status {
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 20px;
+    min-height: 26px;
+  }
+
+  /* ─── Buttons ─── */
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 14px 32px;
+    background: linear-gradient(135deg, var(--accent), #16a34a);
+    color: #fff;
+    font-family: 'Outfit', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    border: none;
+    border-radius: 14px;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+    box-shadow: 0 4px 20px rgba(34,197,94,0.25);
+    letter-spacing: 0.3px;
+    width: 100%;
+    max-width: 260px;
+  }
+
+  .btn-primary:hover { box-shadow: 0 6px 28px rgba(34,197,94,0.35); transform: translateY(-1px); }
+  .btn-primary:active { transform: scale(0.96); box-shadow: 0 2px 10px rgba(34,197,94,0.2); }
+
+  .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 14px 32px;
+    background: rgba(34,197,94,0.08);
+    color: var(--accent);
+    font-family: 'Outfit', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    border: 1px solid rgba(34,197,94,0.25);
+    border-radius: 14px;
+    cursor: pointer;
+    transition: transform 0.15s ease, background 0.15s ease;
+    width: 100%;
+    max-width: 260px;
+    margin-top: 10px;
+  }
+
+  .btn-secondary:hover { background: rgba(34,197,94,0.14); transform: translateY(-1px); }
+  .btn-secondary:active { transform: scale(0.96); }
+
+  /* ─── Stats row ─── */
+  .stats-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin: 0 16px 14px;
+    position: relative;
+    z-index: 1;
+    animation: fadeUp 0.5s 0.1s ease both;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 18px 16px;
+  }
+
+  .stat-card .stat-icon {
+    font-size: 20px;
+    margin-bottom: 10px;
+    display: block;
+  }
+
+  .stat-value {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 32px;
+    line-height: 1;
+    color: var(--text);
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+  }
+
+  .stat-value span {
+    font-family: 'Outfit', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--muted);
+    letter-spacing: 0;
+  }
+
+  .stat-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .stat-card.highlight {
+    background: linear-gradient(135deg, #0e1f16, var(--surface));
+    border-color: rgba(34,197,94,0.15);
+  }
+
+  .stat-card.highlight .stat-value { color: var(--accent); }
+
+  /* ─── Level badge ─── */
+  .level-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .level-text {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .level-badge {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 5px 12px;
+    border-radius: 999px;
+    background: rgba(34,197,94,0.1);
+    border: 1px solid rgba(34,197,94,0.2);
+    color: var(--accent);
+  }
+
+  .level-badge.elite {
+    background: rgba(251,191,36,0.1);
+    border-color: rgba(251,191,36,0.3);
+    color: #fbbf24;
+  }
+
+  /* ─── Heatmap ─── */
+  .heatmap-wrapper {
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+
+  .heatmap-labels {
+    display: flex;
+    gap: 0;
+    margin-bottom: 6px;
+    padding-left: 28px;
+  }
+
+  .heatmap-labels span {
+    flex: 1;
+    text-align: center;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--muted);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .heatmap-grid-wrap {
+    display: flex;
+    gap: 6px;
+    align-items: flex-start;
+  }
+
+  .heatmap-day-labels {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+
+  .heatmap-day-labels span {
+    height: 14px;
+    font-size: 9px;
+    font-weight: 600;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    letter-spacing: 0.3px;
+  }
+
+  #calendar {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4px;
+    flex: 1;
+  }
+
+  .day {
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 3px;
+    background: var(--surface2);
+    border: 1px solid rgba(255,255,255,0.03);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    cursor: default;
+    position: relative;
+  }
+
+  .day:hover { transform: scale(1.3); z-index: 2; }
+
+  .level-1 { background: var(--green1); border-color: rgba(22,101,52,0.4); }
+  .level-2 { background: var(--green2); border-color: rgba(22,101,52,0.6); box-shadow: 0 0 4px rgba(22,101,52,0.3); }
+  .level-3 { background: var(--green3); border-color: rgba(34,197,94,0.5); box-shadow: 0 0 8px rgba(34,197,94,0.3); }
+  .level-4 { background: var(--green4); border-color: rgba(74,222,128,0.7); box-shadow: 0 0 12px rgba(74,222,128,0.4); }
+
+  .heatmap-legend {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 4px;
+    margin-top: 12px;
+  }
+
+  .heatmap-legend span {
+    font-size: 10px;
+    color: var(--muted);
+    font-weight: 500;
+  }
+
+  .legend-box {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+  }
+
+  /* ─── Animations ─── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div class="header-top">
+    <span class="app-label">Gym Tracker</span>
+    <div class="streak-pill" id="streak-pill">🔥 <span id="streak-count">0</span> day streak</div>
+  </div>
   <h1>CONSISTENCY</h1>
-</div><div class="card">
+</div>
+
+<!-- Status Card -->
+<div class="card status-card">
+  <div class="status-icon" id="status-icon">🏋️</div>
   <div id="status">Not started today</div>
   <button class="btn-primary" onclick="startWorkout()" id="startBtn">Start Workout</button>
-  <button class="btn-secondary" id="completeBtn" onclick="completeWorkout()" style="display:none;">Complete 1 Hour</button>
-</div><div class="card">
-  <div id="score">0/7</div>
-</div><div class="card">
-  <div id="calendar"></div>
-</div><script>
-let data = JSON.parse(localStorage.getItem("gymData")) || {};
-let today = new Date().toISOString().split("T")[0];
+  <button class="btn-secondary" id="completeBtn" onclick="completeWorkout()" style="display:none;">Complete 1 Hour ✓</button>
+</div>
 
-function startWorkout(){
-  document.getElementById("status").innerText="Workout in progress ⏱️";
-  document.getElementById("completeBtn").style.display="block";
-  document.getElementById("startBtn").style.display="none";
-}
+<!-- Stats Row -->
+<div class="stats-row">
+  <div class="stat-card highlight">
+    <span class="stat-icon">📅</span>
+    <div class="stat-value" id="score-val">0<span>/7</span></div>
+    <div class="stat-label">This Week</div>
+  </div>
+  <div class="stat-card">
+    <span class="stat-icon">💪</span>
+    <div class="stat-value" id="total-val">0</div>
+    <div class="stat-label">Total Days</div>
+  </div>
+</div>
 
-function completeWorkout(){
-  data[today]=true;
-  localStorage.setItem("gymData",JSON.stringify(data));
+<!-- Level Card -->
+<div class="card" style="animation-delay:0.15s">
+  <div class="card-label">Your Level</div>
+  <div class="level-row">
+    <div class="level-text" id="level">Beginner</div>
+    <div class="level-badge" id="level-badge">Rookie</div>
+  </div>
+</div>
 
-  document.body.style.background="#052e16";
-  setTimeout(()=>{document.body.style.background="#080b10";},300);
+<!-- Heatmap Card -->
+<div class="card" style="animation-delay:0.2s">
+  <div class="card-label">Consistency Heatmap · Last 28 Days</div>
+  <div class="heatmap-wrapper">
+    <div id="calendar"></div>
+  </div>
+  <div class="heatmap-legend">
+    <span>Less</span>
+    <div class="legend-box" style="background:var(--surface2);border:1px solid rgba(255,255,255,0.05)"></div>
+    <div class="legend-box" style="background:var(--green1)"></div>
+    <div class="legend-box" style="background:var(--green2)"></div>
+    <div class="legend-box" style="background:var(--green3)"></div>
+    <div class="legend-box" style="background:var(--green4)"></div>
+    <span>More</span>
+  </div>
+</div>
 
-  updateUI();
-}
+<script>
+  let data = JSON.parse(localStorage.getItem("gymData")) || {};
+  let today = new Date().toISOString().split("T")[0];
 
-function getLast7Days(){
-  let days=[];
-  for(let i=6;i>=0;i--){
-    let d=new Date();
-    d.setDate(d.getDate()-i);
-    days.push(d.toISOString().split("T")[0]);
+  function startWorkout() {
+    document.getElementById("status").innerText = "Workout in progress ⏱️";
+    document.getElementById("completeBtn").style.display = "inline-flex";
+    document.getElementById("startBtn").style.display = "none";
+    const icon = document.getElementById("status-icon");
+    icon.textContent = "⏱️";
+    icon.className = "status-icon active";
   }
-  return days;
-}
 
-function updateUI(){
-  let last7=getLast7Days();
-  let count=last7.filter(d=>data[d]).length;
-
-  document.getElementById("score").innerText=`${count}/7`;
-
-  if(data[today]){
-    document.getElementById("startBtn").style.display="none";
-    document.getElementById("completeBtn").style.display="none";
-    document.getElementById("status").innerText="Completed today ✅";
-  }else{
-    document.getElementById("startBtn").style.display="block";
-    document.getElementById("completeBtn").style.display="none";
+  function completeWorkout() {
+    data[today] = true;
+    localStorage.setItem("gymData", JSON.stringify(data));
+    document.getElementById("status").innerText = "Completed today ✅";
+    document.getElementById("completeBtn").style.display = "none";
+    document.getElementById("startBtn").style.display = "none";
+    const icon = document.getElementById("status-icon");
+    icon.textContent = "✅";
+    icon.className = "status-icon done";
+    updateUI();
   }
 
-  renderCalendar();
-}
+  function getLast7Days() {
+    let days = [];
+    for (let i = 6; i >= 0; i--) {
+      let d = new Date();
+      d.setDate(d.getDate() - i);
+      days.push(d.toISOString().split("T")[0]);
+    }
+    return days;
+  }
 
-function renderCalendar(){
-  let cal=document.getElementById("calendar");
-  cal.innerHTML="";
+  function getStreak() {
+    let streak = 0;
+    let d = new Date();
+    while (true) {
+      let key = d.toISOString().split("T")[0];
+      if (data[key]) { streak++; d.setDate(d.getDate() - 1); }
+      else break;
+    }
+    return streak;
+  }
 
-  for(let i=27;i>=0;i--){
-    let d=new Date();
-    d.setDate(d.getDate()-i);
-    let day=d.toISOString().split("T")[0];
+  function updateUI() {
+    let last7 = getLast7Days();
+    let count = last7.filter(d => data[d]).length;
+    let total = Object.keys(data).filter(k => data[k]).length;
+    let streak = getStreak();
 
-    let div=document.createElement("div");
-    div.classList.add("day");
+    document.getElementById("score-val").innerHTML = `${count}<span>/7</span>`;
+    document.getElementById("total-val").innerText = total;
+    document.getElementById("streak-count").innerText = streak;
 
-    if(data[day]){
-      let streak=0;
+    let level = "Beginner";
+    let badge = "Rookie";
+    let isElite = false;
+    if (count >= 3) { level = "Building Habit"; badge = "Rising"; }
+    if (count >= 5) { level = "Consistent 🔥"; badge = "Consistent"; }
+    if (count === 7) { level = "Elite 🏆"; badge = "Elite"; isElite = true; }
 
-      for(let j=0;j<4;j++){
-        let x=new Date(day);
-        x.setDate(x.getDate()-j);
-        let key=x.toISOString().split("T")[0];
+    document.getElementById("level").innerText = level;
+    const badgeEl = document.getElementById("level-badge");
+    badgeEl.innerText = badge;
+    badgeEl.className = "level-badge" + (isElite ? " elite" : "");
 
-        if(data[key]) streak++;
-        else break;
+    if (data[today]) {
+      document.getElementById("startBtn").style.display = "none";
+      document.getElementById("completeBtn").style.display = "none";
+      document.getElementById("status").innerText = "Completed today ✅";
+      const icon = document.getElementById("status-icon");
+      icon.textContent = "✅";
+      icon.className = "status-icon done";
+    }
+
+    renderCalendar();
+  }
+
+  function renderCalendar() {
+    let cal = document.getElementById("calendar");
+    cal.innerHTML = "";
+
+    let days = [];
+    for (let i = 27; i >= 0; i--) {
+      let d = new Date();
+      d.setDate(d.getDate() - i);
+      days.push(d.toISOString().split("T")[0]);
+    }
+
+    days.forEach((day, idx) => {
+      let div = document.createElement("div");
+      div.classList.add("day");
+
+      if (data[day]) {
+        let last7 = getLast7Days();
+        let count = last7.filter(d => data[d]).length;
+        let level = 1;
+        if (count >= 3) level = 2;
+        if (count >= 5) level = 3;
+        if (count === 7) level = 4;
+        div.classList.add(`level-${level}`);
       }
 
-      let level=1;
-      if(streak>=2) level=2;
-      if(streak>=3) level=3;
-      if(streak>=4) level=4;
+      // Tooltip
+      const d = new Date(day + 'T00:00:00');
+      const label = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+      div.title = label + (data[day] ? ' · Worked out ✅' : ' · Rest day');
 
-      div.classList.add(`level-${level}`);
-    }
+      // Highlight today
+      if (day === today) {
+        div.style.outline = '2px solid rgba(34,197,94,0.6)';
+        div.style.outlineOffset = '1px';
+      }
 
-    if(day===today){
-      div.style.outline="2px solid #22c55e";
-    }
-
-    cal.appendChild(div);
+      cal.appendChild(div);
+    });
   }
-}
 
-updateUI();
-
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("./service-worker.js");
-}
-</script></body>
+  updateUI();
+</script>
+</body>
 </html>
