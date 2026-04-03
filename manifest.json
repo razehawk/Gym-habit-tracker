@@ -2,7 +2,7 @@
   "name": "Consistency Gym",
   "short_name": "Gym Tracker",
   "description": "Track your gym consistency every day",
-  "start_url": "/index.html",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#080b10",
   "theme_color": "#22c55e",
